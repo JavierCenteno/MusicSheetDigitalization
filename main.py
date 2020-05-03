@@ -70,60 +70,119 @@ d2 = max(d)
 
 print(n1, n2, d1, d2)
 
-I = int((5*n2 + 4*n2)*1.2)
-
 width = len(img1[0])
 
-dx = int(width/50)
+dx = int(width/60)
 
-#a = random.randint(width/5, 2*width/5)
+a = random.randint(width/5, 2*width/5)
 b = random.randint(2*width/5, 3*width/5)
-#c = random.randint(3*width/5, 4*width/5)
+c = random.randint(3*width/5, 4*width/5)
 
-#a = img1[:, a:a+dx]
+a = img1[:, a:a+dx]
 b = img1[:, b:b+dx]
-#c = img1[:, c:c+dx]
+c = img1[:, c:c+dx]
 
-proy = [sum(i) for i in b]
-proy = max(proy) - proy
+proya = [sum(i) for i in a]
+compareA = max(proya)
+proya = compareA - proya
 
-plt.plot(proy)
-plt.show()
+proyb = [sum(i) for i in b]
+compareB = max(proyb)
+proyb = compareB - proyb
 
-# firstGuess = list()
-# first = True
-# i=0
-# while i < len(proy): # Mientras solo se guardan la primera y ultima linea
-# 	if proy[i] == 0:
-# 		StaffFound = 0
-# 		inStaff = True
-# 		black = 0
-# 		white = 0
-# 		keep = True
-# 		for j in range(I):
-# 			if keep and first:
-# 				first = False
-# 				print()
-# 				if inStaff:
-# 					if proy[i+j] == 0:
-# 						black+=1
-# 					else:
-# 						inStaff = False
-# 						if black >= n1 and black <= n2:
-# 								StaffFound+=1
-# 								if StaffFound == 5:
-# 									keep = False
-# 									firstGuess.append((i, i+j-1))
-# 									i = i + j - 1
-# 				else:
-# 					if proy[i+j] != 0:
-# 						white+=1
-# 					else:
-# 						inStaff = True
-# 						if white >= d1 and white <= d2:
-# 								keep = False
-# 	i+=1
-# print(len(firstGuess), ":)")
+proyc = [sum(i) for i in c]
+compareC = max(proyc)
+proyc = compareC - proyc
+
+tProyA = np.zeros(len(proya))
+tProyB = np.zeros(len(proyb))
+tProyC = np.zeros(len(proyc))
+
+inStaffA = False
+countA = 0
+
+inStaffB = False
+countB = 0
+
+inStaffC = False
+countC = 0
+
+for pixel in range(len(proya)):
+	if inStaffA:
+		if proya[pixel] < compareA*0.98:
+			inStaffA = False
+			if countA >= n1 and countA <= n2:
+				middleA = round(countA/2)
+				tProyA[pixel - middleA] = 1
+			countA = 0
+		countA+=1
+
+	else:
+		if proya[pixel] > compareA*0.98:
+			inStaffA = True
+			countA+=1
+for pixel in range(len(proyb)):
+	if inStaffB:
+		if proyb[pixel] < compareB*0.98:
+			inStaffB = False
+			if countB >= n1 and countB <= n2:
+				middleB = round(countB/2)
+				tProyB[pixel - middleB] = 1
+			countB = 0
+		countB+=1
+
+	else:
+		if proyb[pixel] > compareB*0.98:
+			inStaffB = True
+			countB+=1
+for pixel in range(len(proyc)):
+	if inStaffC:
+		if proyc[pixel] < compareC*0.98:
+			inStaffC = False
+			if countC >= n1 and countC <= n2:
+				middleC = round(countC/2)
+				tProyC[pixel - middleC] = 1
+			countC = 0
+		countC+=1
+
+	else:
+		if proyc[pixel] > compareC*0.98:
+			inStaffC = True
+			countC+=1
+
+alpha = d1
+beta = int(round(d2 + 2*(n2-(n2-n1)/2)))
+
+pentagramas = list()
+
+A = 0
+
+I = int(round((5*n2 + 4*d2)*1.2))
+
+print(I, "I")
+
+while A < tProyA.size:
+	if tProyA[A] == 1:
+		first = A
+		system = True
+		staffs = 1
+		lastSpot = A
+		for t in range(first+1,first+I):
+			if tProyA[t] == 1.0:
+				distance = t - lastSpot
+				lastSpot = t
+				if distance > alpha and distance < beta:
+					staffs +=1
+				else:
+					system = False
+		if staffs == 5 and system:
+			pentagramas.append((first,lastSpot))		
+	A+=1
+Sis = img1[pentagramas[0][0]:pentagramas[0][1],:]
+
+cv2.imshow('image', Sis) 
+cv2.waitKey(0)
+
 
 
 #print(round(ts))
