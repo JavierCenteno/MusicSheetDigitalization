@@ -74,9 +74,11 @@ width = len(img1[0])
 
 dx = int(width/60)
 
-a = random.randint(width/5, 2*width/5)
-b = random.randint(2*width/5, 3*width/5)
-c = random.randint(3*width/5, 4*width/5)
+#### optimizar para obtener secciones y proyeccones automaticas
+
+a = random.randint(int(width/5), int(2*width/5))
+b = random.randint(int(2*width/5), int(3*width/5))
+c = random.randint(int(3*width/5), int(4*width/5))
 
 a = img1[:, a:a+dx]
 b = img1[:, b:b+dx]
@@ -121,6 +123,7 @@ for pixel in range(len(proya)):
 		if proya[pixel] > compareA*0.98:
 			inStaffA = True
 			countA+=1
+
 for pixel in range(len(proyb)):
 	if inStaffB:
 		if proyb[pixel] < compareB*0.98:
@@ -135,6 +138,7 @@ for pixel in range(len(proyb)):
 		if proyb[pixel] > compareB*0.98:
 			inStaffB = True
 			countB+=1
+
 for pixel in range(len(proyc)):
 	if inStaffC:
 		if proyc[pixel] < compareC*0.98:
@@ -152,38 +156,75 @@ for pixel in range(len(proyc)):
 
 alpha = d1
 beta = int(round(d2 + 2*(n2-(n2-n1)/2)))
-
-pentagramas = list()
-
-A = 0
-
 I = int(round((5*n2 + 4*d2)*1.2))
 
-print(I, "I")
+def pentSearch(tProyA, I, alpha, beta, pentagramas):
+	A = 0
+	while A < tProyA.size:
+		if tProyA[A] == 1:
+			first = A
+			system = True
+			staffs = 1
+			lastSpot = A
+			for t in range(first+1,first+I):
+				if tProyA[t] == 1.0:
+					distance = t - lastSpot
+					lastSpot = t
+					if distance > alpha and distance < beta:
+						staffs +=1
+					else:
+						system = False
+			if staffs == 5 and system:
+				pentagramas.append((first,lastSpot))		
+		A+=1
+	return pentagramas
 
-while A < tProyA.size:
-	if tProyA[A] == 1:
-		first = A
-		system = True
-		staffs = 1
-		lastSpot = A
-		for t in range(first+1,first+I):
-			if tProyA[t] == 1.0:
-				distance = t - lastSpot
-				lastSpot = t
-				if distance > alpha and distance < beta:
-					staffs +=1
-				else:
-					system = False
-		if staffs == 5 and system:
-			pentagramas.append((first,lastSpot))		
-	A+=1
-Sis = img1[pentagramas[0][0]:pentagramas[0][1],:]
-
-cv2.imshow('image', Sis) 
-cv2.waitKey(0)
+def intersectingIntervals(a, b):
+	if (a[0] <= b[0] and a[1] >= b[0]) or (a[0] <= b[1] and a[1] >= b[1]):
+		return False
+	else:
+		return True
 
 
 
-#print(round(ts))
+x=pentSearch(tProyA, I, alpha, beta, [])
+y=pentSearch(tProyB, I, alpha, beta, x)
+z=pentSearch(tProyC, I, alpha, beta, y)
 
+final = list()
+for tup in z:
+	if len(final) == 0:
+		final.append(tup)
+	else:
+		flag = True
+		for tup2 in final:
+			if not intersectingIntervals(tup2, tup):
+				flag = False
+		if flag:
+			final.append(tup)
+
+#Cutting the systems in files with name upper-lower
+
+imgCount = 0
+
+for tup in final:
+	countUP = 0
+	countDOWN = 0
+	#cheking for blankspace above the system
+	flag = True
+	a = tup[0]
+	while flag:
+		if sum(img1[a]) > 255*width*0.98:
+			flag = False
+		a-=1
+		countUP+=1
+	#cheking for blankspace below the system
+	flag = True
+	b = tup[1]
+	while flag:
+		if sum(img1[b]) > 255*width*0.98:
+			flag = False
+		b+=1
+		countDOWN+=1
+	cv2.imwrite('./system/'+str(imgCount)+"-"+str(countUP)+".png", img1[tup[0]-countUP:tup[1]+countDOWN,:]) 
+	imgCount+=1

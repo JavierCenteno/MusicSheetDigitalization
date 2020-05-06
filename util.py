@@ -13,13 +13,15 @@ import numpy
 '''
 Convierte el archivo pdf en la ubicación dada a imágenes jpg, guardando cada página como una imagen separada.
 '''
-def pdf_to_jpg(path):
-	pages = pdf2image.convert_from_path(path, 500, single_file = True)
+def pdf_to_png(path):
+	pages = pdf2image.convert_from_path(path, 500, single_file = False)
 	count = 0
 	for page in pages:
-		if count == 0:
-			page.save(path + '_' + str(count) + '.jpg', 'JPEG')
-			count += 1
+		print(count)
+		if count == 1:
+			print("helo")
+			page.save(path + '_' + str(count) + '.png', 'PNG')
+		count += 1
 
 '''
 Elimina todas las filas y columnas de píxeles de la imagen dada que no sean múltiplos del número dado.
