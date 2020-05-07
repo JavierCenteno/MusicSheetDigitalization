@@ -76,88 +76,12 @@ dx = int(width/60)
 
 #### optimizar para obtener secciones y proyeccones automaticas
 
-a = random.randint(int(width/5), int(2*width/5))
-b = random.randint(int(2*width/5), int(3*width/5))
-c = random.randint(int(3*width/5), int(4*width/5))
-
-a = img1[:, a:a+dx]
-b = img1[:, b:b+dx]
-c = img1[:, c:c+dx]
-
-proya = [sum(i) for i in a]
-compareA = max(proya)
-proya = compareA - proya
-
-proyb = [sum(i) for i in b]
-compareB = max(proyb)
-proyb = compareB - proyb
-
-proyc = [sum(i) for i in c]
-compareC = max(proyc)
-proyc = compareC - proyc
-
-tProyA = np.zeros(len(proya))
-tProyB = np.zeros(len(proyb))
-tProyC = np.zeros(len(proyc))
-
-inStaffA = False
-countA = 0
-
-inStaffB = False
-countB = 0
-
-inStaffC = False
-countC = 0
-
-for pixel in range(len(proya)):
-	if inStaffA:
-		if proya[pixel] < compareA*0.98:
-			inStaffA = False
-			if countA >= n1 and countA <= n2:
-				middleA = round(countA/2)
-				tProyA[pixel - middleA] = 1
-			countA = 0
-		countA+=1
-
-	else:
-		if proya[pixel] > compareA*0.98:
-			inStaffA = True
-			countA+=1
-
-for pixel in range(len(proyb)):
-	if inStaffB:
-		if proyb[pixel] < compareB*0.98:
-			inStaffB = False
-			if countB >= n1 and countB <= n2:
-				middleB = round(countB/2)
-				tProyB[pixel - middleB] = 1
-			countB = 0
-		countB+=1
-
-	else:
-		if proyb[pixel] > compareB*0.98:
-			inStaffB = True
-			countB+=1
-
-for pixel in range(len(proyc)):
-	if inStaffC:
-		if proyc[pixel] < compareC*0.98:
-			inStaffC = False
-			if countC >= n1 and countC <= n2:
-				middleC = round(countC/2)
-				tProyC[pixel - middleC] = 1
-			countC = 0
-		countC+=1
-
-	else:
-		if proyc[pixel] > compareC*0.98:
-			inStaffC = True
-			countC+=1
-
-alpha = d1
-beta = int(round(d2 + 2*(n2-(n2-n1)/2)))
-I = int(round((5*n2 + 4*d2)*1.2))
-
+#### Algoritmo
+#### buscar un area de y*dx random dentro del "centro"de la partitura
+#### buscar su proyeccion horizontal e invertirla segun el maximo cosa que la cantidad de negro sean picos en el histograma
+#### formar la Tproyeccion
+#### se buscan los pentagramas y se agregan a la lista de tuplas.
+#### Se detiene el proceso cuando no se encuentran mas pentagramas en 3 iteraciones
 def pentSearch(tProyA, I, alpha, beta, pentagramas):
 	A = 0
 	while A < tProyA.size:
@@ -185,46 +109,77 @@ def intersectingIntervals(a, b):
 	else:
 		return True
 
+def biggestConectedArea(image, id, beggin):
+    image = image.astype('uint8')
+    nb_components, output, stats, centroids = cv2.connectedComponentsWithStats(image, connectivity=4)
+    sizes = stats[:, -1]
 
+    max_label = 1
+    max_size = sizes[1]
+    for i in range(2, nb_components):
+        if sizes[i] > max_size:
+            max_label = i
+            max_size = sizes[i]
 
-x=pentSearch(tProyA, I, alpha, beta, [])
-y=pentSearch(tProyB, I, alpha, beta, x)
-z=pentSearch(tProyC, I, alpha, beta, y)
+    img2 = np.zeros(output.shape)
+    img2[output == max_label] = 255
+    cv2.imwrite("./staves/"+str(id)+"-"+str(beggin)+".png", 255 -img2)
+    return
 
 final = list()
-for tup in z:
-	if len(final) == 0:
-		final.append(tup)
-	else:
-		flag = True
-		for tup2 in final:
-			if not intersectingIntervals(tup2, tup):
-				flag = False
-		if flag:
+pastLen = len(final)
+Flag = True
+noChange = 0
+
+while Flag:
+	a = random.randint(int(width/5), int(2*width/5))  ## Buscar alguna columna de la imagen
+	a = img1[:, a:a+dx]
+	proya = [sum(i) for i in a]
+	compareA = max(proya)
+	proya = compareA - proya
+	tProyA = np.zeros(len(proya))
+	inStaffA = False
+	countA = 0
+	for pixel in range(len(proya)):
+		if inStaffA:
+			if proya[pixel] < compareA*0.98:
+				inStaffA = False
+				if countA >= n1 and countA <= n2:
+					middleA = round(countA/2)
+					tProyA[pixel - middleA] = 1
+				countA = 0
+			countA+=1
+
+		else:
+			if proya[pixel] > compareA*0.98:
+				inStaffA = True
+				countA+=1
+	alpha = d1
+	beta = int(round(d2 + 2*(n2-(n2-n1)/2)))
+	I = int(round((5*n2 + 4*d2)*1.2))
+	finded = pentSearch(tProyA, I, alpha, beta, [])
+	for tup in finded:
+		if len(final) == 0:
 			final.append(tup)
+		else:
+			flag = True
+			for tup2 in final:
+				if not intersectingIntervals(tup2, tup):
+					flag = False
+			if flag:
+				final.append(tup)
+	if pastLen == len(final):
+		noChange+=1
+		if noChange == 3:
+			Flag = False
+	pastLen = len(final)
+
 
 #Cutting the systems in files with name upper-lower
 
 imgCount = 0
 
 for tup in final:
-	countUP = 0
-	countDOWN = 0
-	#cheking for blankspace above the system
-	flag = True
-	a = tup[0]
-	while flag:
-		if sum(img1[a]) > 255*width*0.98:
-			flag = False
-		a-=1
-		countUP+=1
-	#cheking for blankspace below the system
-	flag = True
-	b = tup[1]
-	while flag:
-		if sum(img1[b]) > 255*width*0.98:
-			flag = False
-		b+=1
-		countDOWN+=1
-	cv2.imwrite('./system/'+str(imgCount)+"-"+str(countUP)+".png", img1[tup[0]-countUP:tup[1]+countDOWN,:]) 
+	sub = 255 - img1[tup[0]-int(I/2):tup[1]+int(I/2), :]
+	biggestConectedArea(sub, imgCount, int(I/2))
 	imgCount+=1
