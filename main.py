@@ -132,7 +132,8 @@ Flag = True
 noChange = 0
 
 while Flag:
-	a = random.randint(int(width/5), int(2*width/5))  ## Buscar alguna columna de la imagen
+	sec = random.randint(2, 5)
+	a = random.randint(int(sec*width/7), int((sec+1)*width/7))  ## Buscar alguna columna de la imagen
 	a = img1[:, a:a+dx]
 	proya = [sum(i) for i in a]
 	compareA = max(proya)
