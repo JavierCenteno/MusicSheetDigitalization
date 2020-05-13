@@ -23,8 +23,6 @@ d2 = None
 # Pentagramas encontrados
 found = None
 
-#### Optimizar para obtener secciones y proyeccones automaticas
-
 #### Algoritmo
 #### buscar un area de y*dx random dentro del "centro"de la partitura
 #### buscar su proyeccion horizontal e invertirla segun el maximo cosa que la cantidad de negro sean picos en el histograma
@@ -57,23 +55,6 @@ def intersecting_intervals(a, b):
 		return False
 	else:
 		return True
-
-def biggest_conected_area(image, id, beggin):
-    image = image.astype('uint8')
-    nb_components, output, stats, centroids = cv2.connectedComponentsWithStats(image, connectivity=4)
-    sizes = stats[:, -1]
-
-    max_label = 1
-    max_size = sizes[1]
-    for i in range(2, nb_components):
-        if sizes[i] > max_size:
-            max_label = i
-            max_size = sizes[i]
-
-    image_2 = np.zeros(output.shape)
-    image_2[output == max_label] = 255
-    cv2.imwrite('./nivel0/' + str(id) + '-' + str(beggin) + '.png', 255 - image_2)
-    return
 
 """
 Lee una imagen en ./pre/, aplica el nivel 0 y guarda los resultados ./nivel0/
@@ -154,12 +135,13 @@ def nivel0(path):
 	
 	width = len(image[0])
 	
-	dx = int(width / 60)
+	dx = int(width / 35)
 	
 	final = list()
 	past_len = len(final)
 	iterations_without_change = 0
-	
+	I = round((5 * n2 + 4 * d2))
+
 	while True:
 		sec = random.randint(2, 5)
 		# Buscar alguna columna de la imagen
@@ -187,8 +169,8 @@ def nivel0(path):
 					count_a += 1
 		alpha = d1
 		beta = int(round(d2 + 2 * (n2 - (n2 - n1) / 2)))
-		I = int(round((5 * n2 + 4 * d2) * 1.2))
-		finded = stave_search(t_proy_a, I, alpha, beta, [])
+		I2 = int(round(I * 1.2))
+		finded = stave_search(t_proy_a, I2, alpha, beta, [])
 		for tup in finded:
 			if len(final) == 0:
 				final.append(tup)
@@ -201,15 +183,54 @@ def nivel0(path):
 					final.append(tup)
 		if past_len == len(final):
 			iterations_without_change += 1
-			if iterations_without_change == 3:
+			if iterations_without_change == 5:
 				break
 		past_len = len(final)
 	
 	# Cutting the systems in files with name upper-lower
 	
 	image_count = 0
+
+	# Se ordena la lista de tuplas 
+
+	final.sort(key = lambda x: x[0]) 
 	
-	for tup in final:
-		sub = 255 - image[tup[0] - int(I / 2) : tup[1] + int(I / 2), :]
-		biggest_conected_area(sub, image_count, int(I / 2))
-		image_count += 1
+	image = 255 - image
+	epsilon = int(round(width*0.02))
+	print(final)
+
+	for i in range(len(final)):
+		countUP = 0
+		countDOWN = 0
+		ysup = final[i][0]
+		yinf = final[i][1]
+		if i == 0:
+			## Buscando limite superior
+			while True:
+				countUP+=1
+				pro = sum(image[ysup-countUP])
+				if pro == 0 or countUP == I:
+					break
+			countDOWN = int((final[i+1][0] + yinf)/2) + epsilon
+			print(countUP, "UP", countDOWN, "DOWN", I, "I")
+			imwr = image[ysup - countUP:countDOWN,:]
+			imwr = 255 - imwr
+			cv2.imwrite("./level0/"+str(countUP)+"-"+str(countDOWN)+"-"+str(i)+".png", imwr)
+		elif i == len(final) - 1:
+			## Buscando limite inferior
+			while True:
+				countDOWN+=1
+				pro = sum(image[yinf+countDOWN])
+				if pro == 0 or countDOWN == I:
+					break
+			countUP = int((final[i-1][1] + ysup)/2) - epsilon	
+			imwr = image[countUP:yinf + countDOWN,:]
+			imwr = 255 - imwr
+			cv2.imwrite("./level0/"+str(countUP)+"-"+str(countDOWN)+"-"+str(i)+".png", imwr)
+		else:
+			countDOWN = int((final[i+1][0] + yinf)/2) + epsilon	
+			countUP = int((final[i-1][1] + ysup)/2) - epsilon	
+			imwr = image[countUP:countDOWN,:]
+			imwr = 255 - imwr
+			cv2.imwrite("./level0/"+str(countUP)+"-"+str(countDOWN)+"-"+str(i)+".png", imwr)
+		
