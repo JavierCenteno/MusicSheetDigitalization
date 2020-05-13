@@ -12,6 +12,17 @@ import cv2
 import numpy as np
 import random
 
+# Ancho mínimo de las líneas del pentagrama
+n1 = None
+# Ancho máximo de las líneas del pentagrama
+n2 = None
+# Distancia mínima entre las líneas del pentagrama
+d1 = None
+# Distancia máxima entre las líneas del pentagrama
+d2 = None
+# Pentagramas encontrados
+found = None
+
 #### Optimizar para obtener secciones y proyeccones automaticas
 
 #### Algoritmo
@@ -124,9 +135,19 @@ def nivel0(path):
 		if histogram_white[dist] > D:
 			d.append(dist)
 	
+	# Indica que n1, n2, d1, d2 son variables de fuera de la función
+	global n1
+	global n2
+	global d1
+	global d2
+	
+	# Ancho mínimo de las líneas del pentagrama
 	n1 = min(n)
+	# Ancho máximo de las líneas del pentagrama
 	n2 = max(n)
+	# Distancia mínima entre las líneas del pentagrama
 	d1 = min(d)
+	# Distancia máxima entre las líneas del pentagrama
 	d2 = max(d)
 	
 	print(n1, n2, d1, d2)
