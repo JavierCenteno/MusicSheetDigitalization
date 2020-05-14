@@ -27,25 +27,30 @@ def nivel1(path):
 	# Mapea el índice de las columnas al ancho de la nota
 	note_ranges = dict()
 	
-	for col in range(len(image_transposed)):
+	window_width = 5
+	
+	for col in range(len(image_transposed) - window_width):
+		y_proyection = dict()
+		y_proyection[-1] = 0
+		y_proyection[len(image)] = 0
+		
+		for row in range(len(image)):
+			y_proyection[row] = 0
+			for window_col in range(window_width):
+				if image_transposed[col + window_col][row] == 0:
+					y_proyection[row] += 1
+		
 		# Índices donde empiezan los tramos de píxeles negros
 		black_stretch_starters = []
 		# Índices donde terminan los tramos de píxeles negros
 		black_stretch_enders = []
-		last_pixel = 255
-		for row in range(len(image)):
-			if image_transposed[col][row] == 255:
-				if last_pixel == 0:
-					last_pixel = 255
-					black_stretch_enders.append(row)
-			elif image_transposed[col][row] == 0:
-				if last_pixel == 255:
-					last_pixel = 0
-					black_stretch_starters.append(row)
-		if len(black_stretch_enders) < len(black_stretch_starters):
-			# Si falta algún finalizador (porque el último píxel es negro)
-			# Añadir a la lista de finalizadores
-			black_stretch_enders.append(len(image) - 1)
+		
+		for row in range(len(image) + 1):
+			if y_proyection[row] == 0 and y_proyection[row - 1] > 0:
+				black_stretch_enders.append(row)
+			elif y_proyection[row] > 0 and y_proyection[row - 1] == 0:
+				black_stretch_starters.append(row)
+		
 		# Tamaños de los tramos de píxeles negros
 		black_stretch_sizes = []
 		for index in range(len(black_stretch_starters)):
@@ -75,7 +80,3 @@ def nivel1(path):
 	# Con la búsqueda de notas por altura debería darnos para encontrar las notas
 	# Además, la diferencia en números de beams puede provocar que no haya un
 	# umbral que separe las notas de los beams a lo largo de todas las notas
-	
-	# Bueno, valdría la pena revisitar lo de los thresholds, el algoritmo por ahora
-	# detecta demasiadas cosas
-	# ¿Valdría la pena ampliar la ventana en vez de usar una sola columna?
