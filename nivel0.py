@@ -56,6 +56,25 @@ def intersecting_intervals(a, b):
 	else:
 		return True
 
+def hardSteave(li, I):
+	distances = []
+	print(li, "li")
+	for i in range(len(li)-1):
+		dist = li[i+1][0] - li[i][1]
+		distances.append(dist)
+	#avg = sum(distances)/len(distances)
+	print(distances, "di")
+	#distances = [ x/avg for x in distances]
+	#print(distances)
+	com = min(distances)*1.7
+	for i in range(len(distances)):
+		if distances[i] > com:  #buscar dos tipos de distancias
+			loc = int((li[i][1] + li[i+1][0])/2)
+			I2 = int(round(I/2))
+			li.append((loc-I2, loc+I2))
+	return li
+	
+
 """
 Lee una imagen en ./pre/, aplica el nivel 0 y guarda los resultados ./nivel0/
 """
@@ -194,7 +213,9 @@ def nivel0(path):
 	# Se ordena la lista de tuplas 
 
 	final.sort(key = lambda x: x[0]) 
-	
+	final = hardSteave(final, I)
+	final.sort(key = lambda x: x[0]) 
+
 	image = 255 - image
 	epsilon = int(round(width*0.02))
 	print(final)
@@ -214,8 +235,6 @@ def nivel0(path):
 			countDOWN = int((final[i+1][0] + yinf)/2) + epsilon
 			print(countUP, "UP", countDOWN, "DOWN", I, "I")
 			imwr = image[ysup - countUP:countDOWN,:]
-			imwr = 255 - imwr
-			cv2.imwrite("./level0/"+str(countUP)+"-"+str(countDOWN)+"-"+str(i)+".png", imwr)
 		elif i == len(final) - 1:
 			## Buscando limite inferior
 			while True:
@@ -225,12 +244,13 @@ def nivel0(path):
 					break
 			countUP = int((final[i-1][1] + ysup)/2) - epsilon	
 			imwr = image[countUP:yinf + countDOWN,:]
-			imwr = 255 - imwr
-			cv2.imwrite("./level0/"+str(countUP)+"-"+str(countDOWN)+"-"+str(i)+".png", imwr)
 		else:
 			countDOWN = int((final[i+1][0] + yinf)/2) + epsilon	
 			countUP = int((final[i-1][1] + ysup)/2) - epsilon	
 			imwr = image[countUP:countDOWN,:]
-			imwr = 255 - imwr
-			cv2.imwrite("./level0/"+str(countUP)+"-"+str(countDOWN)+"-"+str(i)+".png", imwr)
+		#retval, labels = cv2.connectedComponents(imwr, 8, cv2.CV_32S)
+		#print(retval)
+		#print(labels)
+		imwr = 255 - imwr
+		cv2.imwrite("./level0/"+str(countUP)+"-"+str(countDOWN)+"-"+str(i)+".png", imwr)
 		
