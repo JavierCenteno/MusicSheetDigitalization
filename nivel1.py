@@ -10,76 +10,29 @@ Este archivo contiene los métodos para el nivel 1 de la segmentación dedicados
 import cv2
 import nivel0
 
-"""
-Lee una imagen en ./nivel0/, aplica el nivel 1 y guarda los resultados ./nivel1/
-"""
-def nivel1_deteccion_de_notas(path):
-	image = cv2.imread('./nivel0/' + path, 0)
-	image_transposed = cv2.transpose(image)
+# El método del artículo define un método de detección de notas y un método de
+# detección de otros símbolos.
+# El método de distinguir segmentos con notas de segmentos con otros símbolos
+# está pobremente definido.
+# Además, el método de detección de cabezas de notas parece asumir que las
+# cabezas de notas son todas negras, ignorando las blancas, ya que usa el
+# ancho de la proyección de la ventana para detectar las notas y el ancho de
+# las notas blancas difícilmente será el mismo que el de las negras.
 
-	minimumNoteHeadHeight = 2 * nivel0.n2
-	maximumNoteHeadHeight = 2 * nivel0.n2 + 2 * nivel0.d1
-	
-	# Mapea el índice de las columnas al índice del píxel donde empieza una nota
-	note_starters = dict()
-	# Mapea el índice de las columnas al índice del píxel donde termina una nota
-	note_enders = dict()
-	# Mapea el índice de las columnas al ancho de la nota
-	note_ranges = dict()
-	
-	window_width = 5
-	
-	for col in range(len(image_transposed) - window_width):
-		y_proyection = dict()
-		y_proyection[-1] = 0
-		y_proyection[len(image)] = 0
-		
-		for row in range(len(image)):
-			y_proyection[row] = 0
-			for window_col in range(window_width):
-				if image_transposed[col + window_col][row] == 0:
-					y_proyection[row] += 1
-		
-		# Índices donde empiezan los tramos de píxeles negros
-		black_stretch_starters = []
-		# Índices donde terminan los tramos de píxeles negros
-		black_stretch_enders = []
-		
-		for row in range(len(image) + 1):
-			if y_proyection[row] == 0 and y_proyection[row - 1] > 0:
-				black_stretch_enders.append(row)
-			elif y_proyection[row] > 0 and y_proyection[row - 1] == 0:
-				black_stretch_starters.append(row)
-		
-		# Tamaños de los tramos de píxeles negros
-		black_stretch_sizes = []
-		for index in range(len(black_stretch_starters)):
-			black_stretch_sizes.append(black_stretch_enders[index] - black_stretch_starters[index])
-		
-		potential_black_stretch_starters = []
-		potential_black_stretch_enders = []
-		potential_black_stretch_sizes = []
-		for index in range(len(black_stretch_sizes)):
-			if minimumNoteHeadHeight < black_stretch_sizes[index] and black_stretch_sizes[index] < maximumNoteHeadHeight:
-				potential_black_stretch_starters.append(black_stretch_starters[index])
-				potential_black_stretch_enders.append(black_stretch_enders[index])
-				potential_black_stretch_sizes.append(black_stretch_sizes[index])
-		
-		if len(potential_black_stretch_sizes) != 0:
-			note_index = potential_black_stretch_sizes.index(max(potential_black_stretch_sizes))
-			note_starter = potential_black_stretch_starters[note_index]
-			note_ender = potential_black_stretch_enders[note_index]
-			note_range = potential_black_stretch_sizes[note_index]
-			
-			note_starters[col] = note_starter
-			note_enders[col] = note_ender
-			note_ranges[col] = note_range
-	
-	# Nos saltamos lo de los thresholds
-	# Ya estamos asumiendo que una nota tiene tal ancho y es negrita
-	# Con la búsqueda de notas por altura debería darnos para encontrar las notas
-	# Además, la diferencia en números de beams puede provocar que no haya un
-	# umbral que separe las notas de los beams a lo largo de todas las notas
+# El método usado está basado en el método de detección de otros símbolos.
+# Este método emborrona la imagen con un filtro de media (ver parámetro
+# blur_distance). Posteriormente calcula la proyección en x y encuentra los
+# mínimos locales.
+# En cada paso, corta la imagen en dos trozos en el mínimo local más pequeño
+# que divida la imagen en dos segmentos que tengan un ancho igual o superior al
+# ancho mínimo (ver parámetro minimum_slice_width).
+# El método para de cortar la imagen cuando no hay mínimos locales que puedan
+# dividir la imagen en dos segmentos que cumplan esta condición.
+
+# Ancho de la matriz del filtro de media para emborronar la imagen
+blur_distance = nivel0.d2 * 2
+# Ancho mínimo que puede tener un segmento conteniendo un símbolo
+minimum_slice_width = nivel0.d1
 
 """
 Lee una imagen en ./nivel0/, aplica el nivel 1 y guarda los resultados ./nivel1/
@@ -87,8 +40,6 @@ Lee una imagen en ./nivel0/, aplica el nivel 1 y guarda los resultados ./nivel1/
 def nivel1(path):
 	image = cv2.imread('./nivel0/' + path, 0)
 	sliced_images = []
-	blur_distance = nivel0.d2 * 2
-	minimum_slice_width = nivel0.d1
 	print("Minimum slice width: {}".format(minimum_slice_width))
 	height, width = image.shape
 	blurred_image = cv2.blur(image, (blur_distance, blur_distance))
