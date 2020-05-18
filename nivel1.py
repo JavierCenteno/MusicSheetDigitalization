@@ -13,7 +13,7 @@ import nivel0
 """
 Lee una imagen en ./nivel0/, aplica el nivel 1 y guarda los resultados ./nivel1/
 """
-def nivel1(path):
+def nivel1_deteccion_de_notas(path):
 	image = cv2.imread('./nivel0/' + path, 0)
 	image_transposed = cv2.transpose(image)
 
@@ -80,3 +80,45 @@ def nivel1(path):
 	# Con la búsqueda de notas por altura debería darnos para encontrar las notas
 	# Además, la diferencia en números de beams puede provocar que no haya un
 	# umbral que separe las notas de los beams a lo largo de todas las notas
+
+"""
+Lee una imagen en ./nivel0/, aplica el nivel 1 y guarda los resultados ./nivel1/
+"""
+def nivel1(path):
+	image = cv2.imread('./nivel0/' + path, 0)
+	sliced_images = []
+	blur_distance = nivel0.d2 * 2
+	minimum_slice_width = nivel0.d1
+	print("Minimum slice width: {}".format(minimum_slice_width))
+	height, width = image.shape
+	blurred_image = cv2.blur(image, (blur_distance, blur_distance))
+	x_proyection = dict()
+	for col in range(width):
+		x_proyection[col] = 0
+		for row in range(height):
+			x_proyection[col] += 255 - blurred_image[row][col]
+	# the local minima, not counting minima at the start and at the end
+	local_minima = []
+	for index in range(1, len(x_proyection) - 1):
+		if x_proyection[index] < x_proyection[index - 1] and x_proyection[index] < x_proyection[index + 1]:
+			local_minima.append(index)
+	
+	# Recursive function to slice image
+	def slice_image(__minimum_x, __maximum_x):
+		print("Minimum: {} Maximum: {} No issue".format(__minimum_x, __maximum_x))
+		__slice_local_minima = []
+		for __index in range(__minimum_x, __maximum_x):
+			if __index in local_minima:
+				__slice_local_minima.append(__index)
+		__slice_local_minima.sort(key = lambda x : x_proyection[x])
+		for __slice_local_minimum in __slice_local_minima:
+			if (__slice_local_minimum - __minimum_x) > minimum_slice_width and (__maximum_x - __slice_local_minimum) > minimum_slice_width:
+				slice_image(__minimum_x, __slice_local_minimum)
+				slice_image(__slice_local_minimum + 1, __maximum_x)
+				return
+		# If no local minimum can slice the image in two pieces wider than minimum_slice_width
+		sliced_images.append(image[:, __minimum_x:__maximum_x])
+	
+	slice_image(0, width)
+	for sliced_image in sliced_images:
+		print(len(sliced_image))
