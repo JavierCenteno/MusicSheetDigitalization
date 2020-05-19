@@ -40,7 +40,6 @@ Lee una imagen en ./nivel0/, aplica el nivel 1 y guarda los resultados ./nivel1/
 def nivel1(path):
 	image = cv2.imread('./nivel0/' + path, 0)
 	sliced_images = []
-	print("Minimum slice width: {}".format(minimum_slice_width))
 	height, width = image.shape
 	blurred_image = cv2.blur(image, (blur_distance, blur_distance))
 	x_proyection = dict()
@@ -56,7 +55,6 @@ def nivel1(path):
 	
 	# Recursive function to slice image
 	def slice_image(__minimum_x, __maximum_x):
-		print("Minimum: {} Maximum: {} No issue".format(__minimum_x, __maximum_x))
 		__slice_local_minima = []
 		for __index in range(__minimum_x, __maximum_x):
 			if __index in local_minima:
@@ -71,5 +69,7 @@ def nivel1(path):
 		sliced_images.append(image[:, __minimum_x:__maximum_x])
 	
 	slice_image(0, width)
+	index = 0
 	for sliced_image in sliced_images:
-		print(len(sliced_image))
+		cv2.imwrite("./nivel1/" + path + "-" + str(index) + ".png", sliced_image)
+		index += 1
