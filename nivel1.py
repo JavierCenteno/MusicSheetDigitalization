@@ -29,6 +29,11 @@ import nivel0
 # El método para de cortar la imagen cuando no hay mínimos locales que puedan
 # dividir la imagen en dos segmentos que cumplan esta condición.
 
+# Algunos de los mínimos encontrados partían símbolos por la mitad.
+# Estos mínimos, al cortar símbolos por la mitad, estaban muy altos respecto a
+# otros mínimos.
+# Por ello, se ha decidido no escoger mínimos por encima de un cierto umbral.
+
 # Ancho de la matriz del filtro de media para emborronar la imagen
 blur_distance = nivel0.d2
 # Ancho mínimo que puede tener un segmento conteniendo un símbolo
