@@ -30,9 +30,11 @@ import nivel0
 # dividir la imagen en dos segmentos que cumplan esta condición.
 
 # Ancho de la matriz del filtro de media para emborronar la imagen
-blur_distance = nivel0.d2 * 2
+blur_distance = nivel0.d2
 # Ancho mínimo que puede tener un segmento conteniendo un símbolo
 minimum_slice_width = nivel0.d1
+# Solo se aceptarán los mínimos que estén por debajo del umbral
+minimum_accepting_threshold = nivel0.n1 * 5 * 255 * 2
 
 """
 Lee una imagen en ./nivel0/, aplica el nivel 1 y guarda los resultados ./nivel1/
@@ -52,7 +54,7 @@ def nivel1(path):
 	for index in range(1, len(x_proyection) - 1):
 		if x_proyection[index] < x_proyection[index - 1] and x_proyection[index] < x_proyection[index + 1]:
 			local_minima.append(index)
-	
+
 	# Recursive function to slice image
 	def slice_image(__minimum_x, __maximum_x):
 		__slice_local_minima = []
@@ -62,9 +64,10 @@ def nivel1(path):
 		__slice_local_minima.sort(key = lambda x : x_proyection[x])
 		for __slice_local_minimum in __slice_local_minima:
 			if (__slice_local_minimum - __minimum_x) > minimum_slice_width and (__maximum_x - __slice_local_minimum) > minimum_slice_width:
-				slice_image(__minimum_x, __slice_local_minimum)
-				slice_image(__slice_local_minimum + 1, __maximum_x)
-				return
+				if x_proyection[__slice_local_minimum] < minimum_accepting_threshold:
+					slice_image(__minimum_x, __slice_local_minimum)
+					slice_image(__slice_local_minimum + 1, __maximum_x)
+					return
 		# If no local minimum can slice the image in two pieces wider than minimum_slice_width
 		sliced_images.append(image[:, __minimum_x:__maximum_x])
 	
