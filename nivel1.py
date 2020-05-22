@@ -34,10 +34,16 @@ import nivel0
 # otros mínimos.
 # Por ello, se ha decidido no escoger mínimos por encima de un cierto umbral.
 
+# Algunos de los segmentos eran demasiado anchos, abarcando múltiples símbolos
+# Por lo que se ha decidido ignorar las restricciones y trocear un segmento
+# igualmente si tiene segmentos demasiado anchos.
+
 # Ancho de la matriz del filtro de media para emborronar la imagen
 blur_distance = nivel0.d2
 # Ancho mínimo que puede tener un segmento conteniendo un símbolo
 minimum_slice_width = nivel0.d1
+# Ancho máximo que puede tener un segmento conteniendo un símbolo
+maximum_slice_width = nivel0.d2 * 4
 # Solo se aceptarán los mínimos que estén por debajo del umbral
 minimum_accepting_threshold = nivel0.n1 * 5 * 255 * 2
 
@@ -69,7 +75,9 @@ def nivel1(path):
 		__slice_local_minima.sort(key = lambda x : x_proyection[x])
 		for __slice_local_minimum in __slice_local_minima:
 			if (__slice_local_minimum - __minimum_x) > minimum_slice_width and (__maximum_x - __slice_local_minimum) > minimum_slice_width:
-				if x_proyection[__slice_local_minimum] < minimum_accepting_threshold:
+				# Check the minimum is below the threshold
+				# Or ignore if any of the chunks is over the maximum width
+				if x_proyection[__slice_local_minimum] < minimum_accepting_threshold or (__slice_local_minimum - __minimum_x) > maximum_slice_width or (__maximum_x - __slice_local_minimum) > maximum_slice_width:
 					slice_image(__minimum_x, __slice_local_minimum)
 					slice_image(__slice_local_minimum + 1, __maximum_x)
 					return
