@@ -38,6 +38,9 @@ import nivel0
 # Por lo que se ha decidido ignorar las restricciones y trocear un segmento
 # igualmente si tiene segmentos demasiado anchos.
 
+# Algunos de los segmentos no contenían símbolos, por lo que se descartan
+# segmentos cuyo rango en la proyección x esté por debajo de cierto umbral.
+
 # Ancho de la matriz del filtro de media para emborronar la imagen
 blur_distance = nivel0.d2
 # Ancho mínimo que puede tener un segmento conteniendo un símbolo
@@ -46,6 +49,8 @@ minimum_slice_width = nivel0.d1
 maximum_slice_width = nivel0.d2 * 4
 # Solo se aceptarán los mínimos que estén por debajo del umbral
 minimum_accepting_threshold = nivel0.n1 * 5 * 255 * 2
+# Solo se aceptarán imágenes cuyo rango en la proyección x sea mayor que el umbral
+minimum_slice_range = nivel0.n2 * 255 * 2
 
 """
 Lee una imagen en ./nivel0/, aplica el nivel 1 y guarda los resultados ./nivel1/
@@ -85,6 +90,33 @@ def nivel1(path):
 		sliced_images.append(image[:, __minimum_x:__maximum_x])
 	
 	slice_image(0, width)
+	
+	# sliced_images filtradas
+	sliced_images_filtered = []
+	
+	# Discard images with a low range in the x projection as those images
+	# are assumed to be an empty staff
+	for sliced_image in sliced_images:
+		sliced_image_minimum = None
+		sliced_image_maximum = None
+		sliced_image_height, sliced_image_width = sliced_image.shape
+		for sliced_image_col in range(sliced_image_width):
+			sliced_image_x_proyection = 0
+			for sliced_image_row in range(sliced_image_height):
+				sliced_image_x_proyection += 255 - sliced_image[sliced_image_row][sliced_image_col]
+			if sliced_image_minimum == None:
+				sliced_image_minimum = sliced_image_x_proyection
+			elif sliced_image_x_proyection < sliced_image_minimum:
+				sliced_image_minimum = sliced_image_x_proyection
+			if sliced_image_maximum == None:
+				sliced_image_maximum = sliced_image_x_proyection
+			elif sliced_image_x_proyection > sliced_image_maximum:
+				sliced_image_maximum = sliced_image_x_proyection
+		sliced_image_range = sliced_image_maximum - sliced_image_minimum
+		if sliced_image_range > minimum_slice_range and sliced_image_width < maximum_slice_width:
+			sliced_images_filtered.append(sliced_image)
+	
+	sliced_images = sliced_images_filtered
 	index = 0
 	for sliced_image in sliced_images:
 		cv2.imwrite("./nivel1/" + path + "-" + str(index) + ".png", sliced_image)
