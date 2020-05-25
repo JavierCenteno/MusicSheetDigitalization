@@ -8,14 +8,14 @@ from keras.preprocessing import image
 
 
 # Dimensiones de las imagenes
-img_width, img_height = 40, 150
+img_width, img_height = 50, 150
 
 train_data_dir = 'data/train'
 validation_data_dir = 'data/validation'
-nb_train_samples = 36
-nb_validation_samples = 10
-epochs = 6 
-batch_size = 6
+nb_train_samples = 680
+nb_validation_samples = 32
+epochs =  34
+batch_size = 16
 # Arreglar epochs*batch_size = nb_train_samples
 
 if K.image_data_format() == 'channels_first':
@@ -28,7 +28,7 @@ train_datagen = ImageDataGenerator(
 	rescale=1./ 255,
 	shear_range=0.2,
 	zoom_range=0.2,
-	horizontal_flip=True)
+	horizontal_flip=False)
 
 test_datagen = ImageDataGenerator(rescale=1. /255)
 
@@ -85,7 +85,7 @@ model.fit_generator(
 model.save_weights('first_try.h5')
 
 # Prediccion
-img_pred = image.load_img('data/validation/2-4-Time/1.png', target_size = (40, 150))
+img_pred = image.load_img('data/validation/2-4-Time/1.png', target_size = (50, 150))
 img_pred = image.img_to_array(img_pred)
 img_pred = np.expand_dims(img_pred, axis=0)
 
