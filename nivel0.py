@@ -252,5 +252,5 @@ def nivel0(path):
 		#print(retval)
 		#print(labels)
 		imwr = 255 - imwr
-		cv2.imwrite("./level0/"+str(countUP)+"-"+str(countDOWN)+"-"+str(i)+".png", imwr)
+		cv2.imwrite("./nivel0/"+str(countUP)+"-"+str(countDOWN)+"-"+str(i)+".png", imwr)
 		
