@@ -14,5 +14,5 @@ import nivel0
 nivel0.nivel0(path)
 
 import nivel1
-nivel1.nivel1('0-71.png')
+nivel1.nivel1()
 

@@ -55,7 +55,7 @@ minimum_slice_range = nivel0.n2 * 255 * 2
 """
 Lee una imagen en ./nivel0/, aplica el nivel 1 y guarda los resultados ./nivel1/
 """
-def nivel1(path):
+def nivel1_file(path):
 	image = cv2.imread('./nivel0/' + path, 0)
 	sliced_images = []
 	height, width = image.shape
@@ -121,3 +121,13 @@ def nivel1(path):
 	for sliced_image in sliced_images:
 		cv2.imwrite("./nivel1/" + path + "-" + str(index) + ".png", sliced_image)
 		index += 1
+
+import os
+def nivel1():
+	for file in os.listdir("nivel0"):
+		if file.endswith(".png"):
+			file_path = os.path.join("nivel0", file)
+			nivel1_file(file)
+			os.remove(file_path)
+
+nivel1()
