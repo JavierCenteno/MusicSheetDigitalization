@@ -233,7 +233,6 @@ def nivel0(path):
 				if pro == 0 or countUP == I:
 					break
 			countDOWN = int((final[i+1][0] + yinf)/2) + epsilon
-			print(countUP, "UP", countDOWN, "DOWN", I, "I")
 			imwr = image[ysup - countUP:countDOWN,:]
 		elif i == len(final) - 1:
 			## Buscando limite inferior
@@ -248,9 +247,56 @@ def nivel0(path):
 			countDOWN = int((final[i+1][0] + yinf)/2) + epsilon	
 			countUP = int((final[i-1][1] + ysup)/2) - epsilon	
 			imwr = image[countUP:countDOWN,:]
-		#retval, labels = cv2.connectedComponents(imwr, 8, cv2.CV_32S)
-		#print(retval)
-		#print(labels)
+		# Se quitan simbolos no pertenecientes al 
+
+		# output = cv2.connectedComponentsWithStatsWithAlgorithm(imwr, 4, ltype=cv2.CV_16U, ccltype=cv2.CCL_WU)
+		# num_labels = output[0]
+		# labels = output[1]
+		# stats = output[2]
+		# centroids = output[3]
+
+		# length = len(imwr)
+		# height = len(imwr[0])
+		# area = length*height
+		# dispose = list()
+		# #Se recorren borde superior e inferior
+		# for num in range(length):
+		# 	if labels[num,0] != 0:
+		# 		if stats[labels[num,0],cv2.CC_STAT_AREA] < area*0.1:
+		# 			dispose.append(labels[num,0])
+		# 	elif labels[num,height-1] != 0:
+		# 		if stats[labels[num,height-1],cv2.CC_STAT_AREA] < area*0.1:
+		# 			dispose.append(labels[num,height-1])
+
+		# for num in range(height):
+		# 	if labels[0,num] != 0:
+		# 		if stats[labels[0,num],cv2.CC_STAT_AREA] < area*0.1:
+		# 			dispose.append(labels[0,num])
+		# 	elif labels[length-1,num] != 0:
+		# 		if stats[labels[length-1,num],cv2.CC_STAT_AREA] < area*0.1:
+		# 			dispose.append(labels[length-1,num])
+
+		# dispose = set(dispose)
+		# tmp = imwr
+
+		# for v in range(length):
+		# 	for b in range(height):
+		# 		if labels[v,b] in dispose:
+		# 			tmp[v,b] = 0
+
+		# sizes = stats[:, -1]
+		# max_label = 1
+		# max_size = sizes[1]
+		# for i in range(2, num_labels):
+		# 	if sizes[i] > max_size:
+		# 		max_label = i
+		# 		max_size = sizes[i]
+		# img2 = np.zeros(labels.shape, dtype=np.uint8)
+		# img2[labels == max_label] = 255
+
 		imwr = 255 - imwr
 		cv2.imwrite("./nivel0/"+str(countUP)+"-"+str(countDOWN)+"-"+str(i)+".png", imwr)
+		if i == 0:
+			a = str(countUP)+"-"+str(countDOWN)+"-"+str(i)+".png"
+	return a
 		
